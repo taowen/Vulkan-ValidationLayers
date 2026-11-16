@@ -14,7 +14,7 @@ cmake -S "$repo" -B "$build" -G Ninja \
     -DUPDATE_DEPS=ON -DUPDATE_DEPS_DIR="$build/dependencies" \
     -DBUILD_TESTS=OFF -DBUILD_WERROR=OFF \
     -DCMAKE_SHARED_LINKER_FLAGS='-Wl,-z,max-page-size=16384'
-cmake --build "$build" --parallel "${JOBS:-2}" --target VkLayer_khronos_validation
+cmake --build "$build" --parallel "${JOBS:-2}" --target vvl
 mkdir -p "$output/lib" "$output/layer" "$output/licenses"
 cp "$build/layers/libVkLayer_khronos_validation.so" "$output/lib/"
 cp "$repo/LICENSE.txt" "$output/licenses/Vulkan-ValidationLayers.txt"
@@ -23,8 +23,9 @@ python3 - "$repo" "$build" "$output" <<'PACKAGE'
 import hashlib,json,subprocess,sys
 from pathlib import Path
 repo,build,out=map(Path,sys.argv[1:])
-manifest=json.loads((build/'layers/VkLayer_khronos_validation.json').read_text())
-manifest['layer']['library_path']='../lib/libVkLayer_khronos_validation.so'
+manifest=json.loads((repo/'layers/VkLayer_khronos_validation.json.in').read_text()
+    .replace('@JSON_LAYER_NAME@','VK_LAYER_KHRONOS_validation')
+    .replace('@JSON_LIBRARY_PATH@','../lib/libVkLayer_khronos_validation.so'))
 (out/'layer/validation.json').write_text(json.dumps(manifest,indent=2)+'\n')
 for name in ('Vulkan-Headers','Vulkan-Utility-Libraries','SPIRV-Headers','SPIRV-Tools'):
     source=build/'dependencies'/name

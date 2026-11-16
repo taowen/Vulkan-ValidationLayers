@@ -47,7 +47,8 @@ jobs:
         with:
           path: /opt/arlinux/cache/downloads/addons
           key: arlinux-tool-${{ runner.arch }}-addons-${{ steps.prepare.outputs.vendor-addons-key }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        id: component_cache
         if: runner.os == 'Linux' && steps.prepare.outputs.cache-paths != '' && !contains(fromJSON('["wine-pe","wine-bionic"]'), fromJSON(inputs.request).stage)
         with:
           path: ${{ steps.prepare.outputs.cache-paths }}
@@ -73,6 +74,12 @@ jobs:
         run: |
           script="$ARLINUX_FRAMEWORK/arlinux/build/compact-cache.py"
           if [ -f "$script" ]; then python "$script"; fi
+      - name: Save resumable compiler cache
+        if: always() && runner.os == 'Linux' && steps.component_cache.outputs.cache-primary-key != '' && steps.component_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ steps.prepare.outputs.cache-paths }}
+          key: ${{ steps.component_cache.outputs.cache-primary-key }}
   release:
     if: ${{ fromJSON(inputs.request).operation == 'release' }}
     runs-on: ubuntu-24.04
