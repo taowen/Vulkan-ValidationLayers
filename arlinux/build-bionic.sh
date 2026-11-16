@@ -4,6 +4,8 @@ set -euo pipefail
 [[ $# == 3 ]] || { echo 'Usage: build-bionic.sh NDK BUILD OUTPUT' >&2; exit 2; }
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 ndk="$(realpath "$1")"; build="$(realpath -m "$2")"; output="$(realpath -m "$3")"
+export CMAKE_BUILD_PARALLEL_LEVEL="${JOBS:-2}"
+export CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache
 cmake -S "$repo" -B "$build" -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE="$ndk/build/cmake/android.toolchain.cmake" \
     -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-29 -DANDROID_STL=c++_static \

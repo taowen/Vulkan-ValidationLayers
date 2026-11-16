@@ -159,8 +159,9 @@ if (UPDATE_DEPS)
         list(APPEND update_dep_command "${cmake_var}")
     endif()
 
-    file(TIMESTAMP ${update_dep_py} timestamp_1)
-    file(TIMESTAMP ${known_good_json} timestamp_2)
+    # Actions checkouts change mtimes even when dependency inputs are identical.
+    file(SHA256 ${update_dep_py} timestamp_1)
+    file(SHA256 ${known_good_json} timestamp_2)
 
     string("MD5" md5_hash "${timestamp_1}-${timestamp_2}-${update_dep_command}")
 
